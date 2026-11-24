@@ -1,7 +1,7 @@
 # Agent Learning
 
 A personal reading log about AI agents, built with [Astro](https://astro.build) and
-deployed to GitHub Pages at <https://jay1803.github.io/agent-learning/>. Frontend is
+deployed to GitHub Pages at <https://agent.maxoxo.me/>. Frontend is
 forked from the `reading` site; posts are Markdown files in `src/content/posts/`.
 
 ## Adding a post (manual)

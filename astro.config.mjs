@@ -3,8 +3,7 @@ import remarkGfm from 'remark-gfm';
 import rehypePangu from './src/lib/rehype-pangu.mjs';
 
 export default defineConfig({
-  site: 'https://jay1803.github.io',
-  base: '/agent-learning',
+  site: 'https://agent.maxoxo.me',
   markdown: {
     gfm: false,
     remarkPlugins: [[remarkGfm, { singleTilde: false }]],

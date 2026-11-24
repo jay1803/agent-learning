@@ -29,7 +29,7 @@ by template examples. `.agents/template-state.json` is update bookkeeping only.
 
 ## Project: Agent Learning site
 
-Astro static site, deployed to GitHub Pages (`/agent-learning` base path) by
+Astro static site, deployed to GitHub Pages (custom domain `agent.maxoxo.me`) by
 `.github/workflows/deploy.yml` on push to `main`. Frontend is a fork of the
 `reading` site (see `~/github/reading`); keep the two visually aligned.
 
@@ -46,6 +46,6 @@ Astro static site, deployed to GitHub Pages (`/agent-learning` base path) by
    author's least obvious points — no placeholder text.
 4. Run `npm run build`; fix any failure before committing.
 5. `git add` the post, commit (`--no-gpg-sign`, message `Add: <title>`), `git push origin main`.
-6. Report the post URL: `https://jay1803.github.io/agent-learning/<slug>/`.
+6. Report the post URL: `https://agent.maxoxo.me/<slug>/`.
 
 No org-roam / reading.org / queue.md involvement.
