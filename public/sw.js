@@ -1,6 +1,6 @@
 // Pages are read from local storage first. Refresh is an explicit network update.
 const PAGE_CACHE = 'agent-learning-pages-v1';
-const SHELL_CACHE = 'agent-learning-shell-v3';
+const SHELL_CACHE = 'agent-learning-shell-v4';
 const scope = new URL(self.registration.scope);
 const home = scope.pathname;
 const offline = `${home}offline/`;
