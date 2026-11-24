@@ -7,15 +7,19 @@ export default defineConfig({
   site: 'https://agent.maxoxo.me',
   integrations: [
     readingTheme({
-      name: 'Agent Learning',
-      description: 'Max 学习 Agent 时读过的文章与笔记。每篇都链回原文。',
-      manifestDescription: 'Notes on learning about agents, available offline.',
-      rssDescription: "Articles I'm reading to learn about agents.",
+      name: 'Long Context',
+      lang: 'zh-CN',
+      description: '一份关于 AI Agent 的私人读本。从论文、工程博客到长推文。',
+      dek: ['一份关于 AI Agent 的私人读本。', '从论文、工程博客到长推文。'],
+      tagline: '每篇都附原文链接',
+      manifestDescription: '关于 AI Agent 的文章摘要，支持离线阅读。',
+      rssDescription: '关于 AI Agent 的文章摘要。',
       features: { stats: true },
       nav: [
-        { label: 'Stats', href: '/stats/' },
-        { label: 'About', href: '/about/' },
+        { label: '统计', href: '/stats/' },
+        { label: '关于', href: '/about/' },
       ],
+      footerLink: { label: '全部文章', href: '/' },
     }),
   ],
   markdown: {

@@ -2,44 +2,34 @@
 import BaseLayout from 'astro-reading-theme/layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="About — Agent Learning">
-  <article class="about">
-    <p class="about-eyebrow">About</p>
-    <h1>Notes on learning agents</h1>
-    <div class="prose">
-      <p>A hand-curated log of articles about AI agents, each summarized in Chinese
-      and linked back to its source.</p>
+<BaseLayout title="关于 — Long Context" description="Long Context 收录什么、怎么生成、怎么订阅。">
+  <header class="page-head">
+    <p class="page-eyebrow">关于</p>
+    <h1 class="page-title">关于 Long Context</h1>
+    <p class="page-dek">一份关于 AI Agent 的私人读本，收录我读过的论文、工程博客和长推文的中文摘要。</p>
+  </header>
 
-      <h2>How it works</h2>
-      <p>I send the agent a URL. It fetches the full article, writes a dense summary
-      focused on the author's least obvious insights, and publishes it here.
-      Nothing is scheduled or automatic; every entry is something I chose to read.</p>
+  <section class="section" aria-labelledby="about-what">
+    <p class="section-label">收录</p>
+    <h2 class="section-title" id="about-what">收录什么</h2>
+    <p class="section-body">
+      和 AI Agent 有关的文章：论文、工程博客、长推文。每篇是一份中文摘要，开头是结论，结尾附原文链接。摘要是转述，不是翻译。
+    </p>
+  </section>
 
-      <h2>The summaries</h2>
-      <p>Written in Chinese by default. Conclusion first, then reasoning, no filler.
-      Paraphrased, not translated.</p>
-    </div>
-  </article>
+  <section class="section" aria-labelledby="about-how">
+    <p class="section-label">生成</p>
+    <h2 class="section-title" id="about-how">怎么生成</h2>
+    <p class="section-body">
+      我把文章链接交给一个 agent。它读完原文，写成摘要，构建并发布到这个网站。每次都由我手动触发，没有定时任务。
+    </p>
+  </section>
+
+  <section class="section" aria-labelledby="about-subscribe">
+    <p class="section-label">订阅</p>
+    <h2 class="section-title" id="about-subscribe">怎么订阅</h2>
+    <p class="section-body">
+      RSS：<a href="/rss.xml">/rss.xml</a>。网站支持离线阅读：最近 50 篇会保存在设备上，点顶部的「刷新」可以手动更新。
+    </p>
+  </section>
 </BaseLayout>
-
-<style>
-  .about {
-    max-width: var(--measure);
-    padding: 4rem 0 6rem;
-  }
-  .about-eyebrow {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin: 0 0 1rem;
-  }
-  .about h1 {
-    font-size: clamp(2rem, 1.6rem + 1.6vw, 2.75rem);
-    line-height: 1.1;
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    margin: 0 0 2rem;
-  }
-</style>

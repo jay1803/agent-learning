@@ -1,6 +1,6 @@
-# Agent Learning
+# Long Context
 
-A personal reading log about AI agents, built with [Astro](https://astro.build) and
+A personal reading log about AI agents (formerly "Agent Learning"), built with [Astro](https://astro.build) and
 deployed to GitHub Pages at <https://agent.maxoxo.me/>. Frontend is
 forked from the `reading` site; posts are Markdown files in `src/content/posts/`.
 
