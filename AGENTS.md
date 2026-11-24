@@ -30,8 +30,11 @@ by template examples. `.agents/template-state.json` is update bookkeeping only.
 ## Project: Agent Learning site
 
 Astro static site, deployed to GitHub Pages (custom domain `agent.maxoxo.me`) by
-`.github/workflows/deploy.yml` on push to `main`. Frontend is a fork of the
-`reading` site (see `~/github/reading`); keep the two visually aligned.
+`.github/workflows/deploy.yml` on push to `main`. The frontend (layout, components,
+standard pages) comes from the shared `astro-reading-theme` package
+(`github:jay1803/astro-reading-theme`, local checkout `~/github/astro-reading-theme`);
+this repo only holds content, `about.astro`, `public/`, and site config in `astro.config.mjs`.
+Change front-end code in the theme repo, tag it, then bump the dependency here.
 
 ### Ingest procedure (user provides a URL; manual, never scheduled)
 
