@@ -15,6 +15,6 @@
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
     "astro": "^5.18.2",
-    "astro-reading-theme": "github:jay1803/astro-reading-theme#v0.1.0"
+    "astro-reading-theme": "github:jay1803/astro-reading-theme#v0.2.0"
   }
 }
