@@ -26,3 +26,26 @@ deletion authority. Resolve invalid or conflicting rules before the affected
 operation. A repository's existing branch model and release SOP are not replaced
 by template examples. `.agents/template-state.json` is update bookkeeping only.
 <!-- agent-repo-template:end -->
+
+## Project: Agent Learning site
+
+Astro static site, deployed to GitHub Pages (`/agent-learning` base path) by
+`.github/workflows/deploy.yml` on push to `main`. Frontend is a fork of the
+`reading` site (see `~/github/reading`); keep the two visually aligned.
+
+### Ingest procedure (user provides a URL; manual, never scheduled)
+
+1. Fetch and read the full article at the URL (fall back to browser tools for paywalls/JS pages).
+2. Write `src/content/posts/<slug>.md`. First look at an existing post to match the
+   frontmatter: `title`, `date` (current UTC, ISO 8601), `category` (single lowercase
+   word, default `agents`), `description` (one-line summary), `source` (exact URL),
+   `author` (only if clearly bylined). Every value is a double-quoted YAML string;
+   use curly quotes “ ” inside values, never a straight `"`.
+3. Body: Chinese summary (unless the user says otherwise), conclusion first,
+   a few markdown headings, high information density, a genuine summary of the
+   author's least obvious points — no placeholder text.
+4. Run `npm run build`; fix any failure before committing.
+5. `git add` the post, commit (`--no-gpg-sign`, message `Add: <title>`), `git push origin main`.
+6. Report the post URL: `https://jay1803.github.io/agent-learning/<slug>/`.
+
+No org-roam / reading.org / queue.md involvement.
