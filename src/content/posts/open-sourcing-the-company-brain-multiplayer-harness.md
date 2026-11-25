@@ -64,7 +64,268 @@ INVESTIGATE 让 agent 可以先在后台查，再决定是否发言。这对“�
 - 产品层面：要让用户不担心 agent 做出对公司不利的事，所以记忆工具、访问控制和审批流必须由他们掌控、可按客户需求调整。
 - 优化目标不同：不只是回答质量，而是**作为员工提供的价值**。技术上正确的回答，如果发错频道、暴露私密上下文、重复别人已说的话、打断敏感讨论或忽略了更新的消息，仍然是糟糕的介入。
 
+## 原文代码块与图表
+
+原文 12 张 ASCII 架构图与流程图：整体分层、消息过滤、分诊打分到四种动作、显式消息的处理、computeTurn 各阶段、runModelLoop 每步的钩子与步数预算、工具装配与懒加载、记忆与实时应用的分工、调查后静默、审批挂起与恢复、活动线程的新消息闸门，以及作者的“agent 价值”公式。以下为接口返回的原文，未改动。
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                     COMPANY BRAIN EXPERIENCE                         │
+├──────────────────────────────────────────────────────────────────────┤
+│  Slack UX                                                            │
+│  mentions · DMs · threads · reactions · progress · approval cards    │
+├──────────────────────────────────────────────────────────────────────┤
+│  HARNESS                                                             │
+│  routing · state · policy · memory scope · tools · concurrency        │
+│  recovery · budgets · side effects · telemetry                       │
+├──────────────────────────────────────────────────────────────────────┤
+│  MODELS                                                              │
+│  triage · main reasoning · classifiers · salvage · entity resolution │
+├──────────────────────────────────────────────────────────────────────┤
+│  INFRASTRUCTURE                                                      │
+│  Cloudflare · Postgres · AI Gateway · providers · connected apps     │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+```
+Slack message
+    │
+    ├─ bot or self message? ─────────────────────────────► DROP
+    ├─ unsupported subtype? ─────────────────────────────► DROP
+    ├─ clearly addressed to another person? ─────────────► CONTEXT / DROP
+    ├─ membership or entitlement failure? ───────────────► NOTICE or DROP
+    ├─ emoji-only passive message? ──────────────────────► DROP
+    ├─ quiet channel and not explicit? ──────────────────► DROP
+    ├─ proactive cooldown unavailable? ──────────────────► DROP
+    └─ active turn already running? ─────────────────────► STEERING GATE
+                                                             │
+                                                             ▼
+                                                        TRIAGE ELIGIBLE
+```
+
+```
+                     MESSAGE + CONTEXT
+                            │
+                            ▼
+              ┌──────────────────────────┐
+              │ Triage model             │
+              │ estimates the situation │
+              │                          │
+              │ usefulness              │
+              │ confidence              │
+              │ urgency                 │
+              │ noise                   │
+              │ interruption cost       │
+              │ investigation value     │
+              │ reaction fit            │
+              └────────────┬─────────────┘
+                           │ 0–100 scores
+                           ▼
+              ┌──────────────────────────┐
+              │ Deterministic evaluator  │
+              │ formulas + mode policy   │
+              │ explicit-message rules   │
+              └────────────┬─────────────┘
+                           │
+          ┌────────────────┼────────────────┬────────────────┐
+          ▼                ▼                ▼                ▼
+       ANSWER         INVESTIGATE      ACKNOWLEDGE         PASS
+    full turn          tool check        reaction         silence
+```
+
+```
+Explicit message
+      │
+      ▼
+Triage model
+      │
+      ├─ ACK ───────────────► allowlisted reaction
+      ├─ ANSWER ────────────► full turn
+      ├─ INVESTIGATE ───────► full turn with investigation framing
+      ├─ PASS ──────────────► coerced to ANSWER
+      └─ error / bad parse ─► fallback ANSWER
+```
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                         computeTurn                                │
+├────────────────────────────────────────────────────────────────────┤
+│ A. TOOL ASSEMBLY                                                   │
+│    assemble tool set · determine active tools                      │
+│                            │                                       │
+│ B. CONTEXT LOADING                                                 │
+│    workspace prompt · company context · memory profile             │
+│    thread history · actor · directory · attachments                │
+│                            │                                       │
+│ C. MODEL GENERATION                                                │
+│    runModelLoop · streamed text · tool calls · live updates        │
+│                            │                                       │
+│ D. PROGRESS CHECK                                                  │
+│    final answer or merely “working on it”?                         │
+│                            │                                       │
+│ E. SALVAGE                                                         │
+│    one tool-free pass if only progress text exists                 │
+│                            │                                       │
+│ F. APPROVAL HANDSHAKE                                              │
+│    consequential action? → checkpoint and suspend                  │
+│                            │                                       │
+│ G. FINALIZATION                                                    │
+│    inbox empty? claim current revision; otherwise continue         │
+│                            │                                       │
+│ H. COMPLETION                                                      │
+│    publish · write memory · charge · telemetry · reflect           │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+```
+runModelLoop
+    │
+    ├─ streamText({
+    │    model: main profile,
+    │    system: policies + workspace context,
+    │    messages: conversation + turn state,
+    │    tools: assembled ToolSet,
+    │    activeTools: currently visible names,
+    │    stopWhen: step budget reached,
+    │    abortSignal: turn control
+    │  })
+    │
+    └─ EACH STEP
+         │
+         ├─ onBeforeStep
+         │    ├─ drain live thread inbox
+         │    └─ send pacing/progress nudge if needed
+         │
+         ├─ prepareStep
+         │    ├─ render latest turn state
+         │    └─ hide tools during forced wrap-up
+         │
+         ├─ model output
+         │    ├─ text
+         │    ├─ tool calls
+         │    └─ text + tool calls
+         │
+         ├─ execute tools and append results
+         ├─ record generated step
+         ├─ at limit − 3: warn about remaining budget
+         └─ at limit − 1: remove tools and force final text
+```
+
+```
+                         assembleTurnTools
+                                │
+     ┌──────────────┬────────────┼──────────────┬──────────────┐
+     ▼              ▼            ▼              ▼              ▼
+┌──────────┐  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐
+│ Memory   │  │ Discovery │ │ Live apps │ │ Slack I/O │ │ Effects   │
+│ search   │  │ people    │ │ Gmail     │ │ channel   │ │ save      │
+│ inspect  │  │ entities  │ │ GitHub    │ │ search    │ │ connect   │
+│ resolve  │  │ org tree  │ │ Linear    │ │ progress  │ │ forget    │
+└──────────┘  └───────────┘ │ Notion    │ └───────────┘ └───────────┘
+                            └───────────┘
+                                  │
+                                  ▼
+                         ┌─────────────────┐
+                         │ Lazy families   │
+                         │ sandbox         │
+                         │ scheduler       │
+                         │ hidden until    │
+                         │ enable_tools    │
+                         └─────────────────┘
+```
+
+```
+                 ┌────────────────────────┐
+                 │       Agent turn       │
+                 └───────────┬────────────┘
+                             │
+             ┌───────────────┴────────────────┐
+             ▼                                ▼
+┌────────────────────────┐       ┌────────────────────────┐
+│ Company Brain memory   │       │ Connected applications │
+│ decisions              │       │ current issue status   │
+│ ownership              │       │ latest email           │
+│ project context        │       │ live deployment        │
+│ historical knowledge   │       │ recent Slack messages  │
+└────────────────────────┘       └────────────────────────┘
+        durable / semantic                live / transactional
+```
+
+```
+INVESTIGATE
+    │
+    ▼
+Gather evidence
+memory · Slack · traces · connected apps
+    │
+    ▼
+Is there something actionable or useful?
+    │
+    ├─ yes ─► synthesize and reply
+    │
+    └─ no ──► silentConclusion
+              no Slack message
+              release proactive slot
+```
+
+```
+Model requests consequential tool
+              │
+              ▼
+      Approval classifier
+              │
+      ┌───────┴────────┐
+      ▼                ▼
+ no approval       approval required
+      │                │
+ execute          store pending_approval
+                       │
+                       ▼
+                checkpoint messages,
+                tool state, and revision
+                       │
+                       ▼
+                post Approve / Deny card
+                       │
+                 ┌─────┴─────┐
+                 ▼           ▼
+               Deny       Approve
+                 │           │
+              finish     resumeTurnAfterApproval
+                             │
+                             ▼
+                      same model loop,
+                      preserved context
+```
+
+```
+New message arrives in active thread
+                 │
+                 ▼
+       Active-turn gate model
+                 │
+    ┌────────────┼─────────────┬─────────────┐
+    ▼            ▼             ▼             ▼
+ IGNORE        APPEND        REPLACE       STOP
+ unrelated     add context   supersede     cancel
+                 │             request       │
+                 ▼                          ▼
+         durable inbox                abort signal
+                 │
+                 ▼
+        drain before next step
+                 │
+                 ▼
+    <live_thread_updates> injected
+```
+
+```
+              usefulness × correctness × timeliness
+Agent value = ─────────────────────────────────────
+                 noise × risk × interruption cost
+```
+
 ## 局限
 
 - 这是开源发布配合的架构介绍，没有给出效果数据（例如主动介入的准确率、用户满意度）；产品被停掉的原因只简述为“专注做记忆”，没有说多人 agent 本身的商业表现。
-- 文中大量架构图和 ASCII 流程图接口没有返回，总结只依据文字部分；具体实现细节需要看 GitHub 仓库。
+- 文中配图接口没有返回；12 张 ASCII 架构图和流程图已从原文原样补入上方，具体实现细节仍需看 GitHub 仓库。

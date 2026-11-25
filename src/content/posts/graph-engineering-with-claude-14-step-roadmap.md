@@ -44,8 +44,133 @@ author: "Codez"
 - **定时生态扫描**：保存一次、永久重跑，并行查多个来源，在屏障处按影响排序后写摘要。
 - **规模未知的发现**：并行 finder，对“所有见过的”去重，验证存活者，连续两轮无新发现再停。
 
+## 原文代码块与图表
+
+原文 8 段代码示例：节点契约（schema）、parallel() 扇出、边上的纯代码归约与屏障节点、运行时路由、loop-until-dry 循环、自路由 workflow 会话等。以下为接口返回的原文，未改动。
+
+```python
+Draw it as boxes and arrows. A box is an agent() call. 
+An arrow is a variable passed from one call’s return into another’s 
+prompt. If you can’t draw the arrow - if no variable crosses - the two 
+boxes are independent, and independence is the thing you’ll exploit 
+for the rest of this course.
+
+```
+
+```python
+// A node with a real contract: bounded in, validated out, one job.
+const ITEM = {
+  type: 'object', additionalProperties: false,
+  properties: {
+    title:   { type: 'string' },
+    url:     { type: 'string' },
+    impact:  { type: 'string', enum: ['high', 'medium', 'low'] },
+  },
+  required: ['title', 'url', 'impact'],
+};
+
+const result = await agent(source.prompt, {
+  label:  `research:${source.key}`,
+  schema: ITEM,           // forces validated structured output
+  agentType: 'general-purpose',
+});
+// result is now a shape the next node can trust — not free text.
+```
+
+```python
+The temptation is to spawn an agent to “combine the results.” Resist 
+it. If combining means flatten-and-dedupe, that’s results.flatMap(...) 
+and a Set — deterministic, instant, zero tokens. Save agents for 
+judgment, not for plumbing. A graph where every edge is an agent is a 
+graph paying rent on its own wiring.
+
+```
+
+```python
+phase('Research');
+
+// Nine sources, nine agents, all at once.
+const raw = await parallel(
+  SOURCES.map((s) => () =>
+    agent(s.prompt, {
+      label: `research:${s.key}`,
+      phase: 'Research',
+      schema: ITEM_SCHEMA,     // each node returns validated JSON
+      agentType: 'general-purpose',
+    }),
+  ),
+);
+
+const collected = raw.filter(Boolean);  // drop the nulls from failed agents
+```
+
+```python
+// The edge: plain JS, no agent, zero tokens.
+const flat = collected.flatMap((c) => c.items);
+log(`Collected ${flat.length} items`);
+
+phase('Curate');
+// The barrier node: needs the WHOLE set to dedupe + rank.
+const curated = await agent(
+  `Dedupe and rank these by impact:\n${JSON.stringify(flat)}`,
+  { phase: 'Curate', schema: CURATED_SCHEMA },
+);
+```
+
+```python
+// Router node: an agent classifies, code picks the edge.
+const { severity } = await agent(
+  `Classify this diff's risk:\n${diff}`,
+  { schema: { type: 'object',
+      properties: { severity: { enum: ['low', 'high'] } },
+      required: ['severity'] } },
+);
+
+let review;
+if (severity === 'high') {
+  // heavy path: full parallel audit
+  review = await parallel(FILES.map((f) => () => agent(`Audit ${f}`)));
+} else {
+  // light path: one quick pass
+  review = await agent(`Quick review of ${diff}`);
+}
+```
+
+```
+const seen = new Set(); const confirmed = []; let dry = 0;
+
+while (dry < 2) {                       // stop after 2 empty rounds
+  const found = (await parallel(
+    FINDERS.map((f) => () => agent(f.prompt, { schema: BUGS }))
+  )).filter(Boolean).flatMap((r) => r.bugs);
+
+  const fresh = found.filter((b) => !seen.has(key(b)));
+  if (!fresh.length) { dry++; continue; } // nothing new → toward dry
+  dry = 0;
+  fresh.forEach((b) => seen.add(key(b))); // dedupe vs SEEN, not confirmed
+
+  // diverse-lens verify each fresh finding before it counts
+  const judged = await parallel(fresh.map((b) => () =>
+    parallel(['correctness', 'security', 'repro'].map((lens) => () =>
+      agent(`Judge "${b.desc}" via ${lens} — real?`, { schema: VERDICT })))
+    .then((v) => ({ b, real: v.filter(Boolean).filter((x) => x.real).length >= 2 }))));
+
+  confirmed.push(...judged.filter((v) => v.real).map((v) => v.b));
+}
+```
+
+```python
+› Run a workflow to audit every route under src/routes/ for missing 
+auth. Spawn one agent per route file, then verify each finding before 
+reporting. ● Claude wrote an orchestration script · launching in 
+background… /workflows — auth-audit · running ✓ Scope 1/1 2.1k tok · 
+4s ✓ Fan-out 18/18 one agent per route file ◯ Verify 11/18 3-vote 
+skeptics per finding… ○ Synthesize 0/1 waiting on verify session stays 
+responsive — keep working while the fleet runs
+```
+
 ## 局限
 
 - 这是课程体例的推广文章（有 Substack 链接），**作者没有给出任何实测的耗时、成本或质量数据**，“协调零 token”“扩到上百 subagent”等是对工具特性的描述；“有团队用对抗式评审移植 Bun”也没有给出出处。
 - 文中涉及的 `agent()`、`parallel()`、`pipeline()`、`phase()`、worktree 隔离、`/deep-research`、ultracode、按 `s` 保存等，是作者对 Claude Code dynamic workflows 的描述，具体 API 与行为以官方文档为准。
-- 各步骤的配图接口没有返回，总结依据文字部分；文中 6 段代码示例（含 loop-until-dry 的完整片段）我读了，但只在总结里用文字转述。
+- 各步骤的配图接口没有返回；文中 8 段代码示例已从原文原样补入上方。

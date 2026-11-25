@@ -29,7 +29,47 @@ author: "Christian"
 - 给 $3M+ ARR 公司的六条：先把市场放进一张表再自动化；用冷邮件找 offer、用“每线索联系人数”评估；软件做研究和初稿，复杂销售里买家读到的内容由人把关；先做信号，每个账户都要有“今天为什么联系”的理由；每 30–60 天一次、换角度、重新补全数据；给某个人一个自己负责的管线数字（Ramp 是工程师，小公司可以是一位 GTM 工程师）。
 - 常见错误：买 AI SDR 取代团队；offer 没转化就招 150 个 SDR；只有信号没有底层名单。作者说 Ramp 用了 5 年和一个完整产品团队，你可以用“一张表、几个信号、一个人处理回复”走同样的顺序。
 
+## 原文代码块与图表
+
+文中两段可直接复用的提示词：账户分层打分，以及按信号排序并起草首封邮件（只存草稿、不发送）。以下为接口返回的原文，未改动。
+
+```
+Here's my company list: [file].
+Columns: company, domain, employees, industry, description.
+
+My ICP: [who you sell to, deal size, must-haves, deal-breakers].
+
+1. For every company, write one line on what they sell.
+2. Score each one 0-100 against my ICP, with one line on why.
+3. Cut anything under 80.
+4. Split the rest into 3 tiers:
+   Tier 1: the biggest likely deal size or a live buying signal
+   Tier 2: a strong fit with no signal yet
+   Tier 3: a fit, but small
+5. Give me the count in each tier.
+
+Don't invent any data. If you can't tell, mark it UNKNOWN.
+```
+
+```
+Here's my qualified account list: [file].
+Here's this week's signal data: [file].
+Signals: pricing page visits, new hires in [role], funding,
+job posts mentioning [problem], competitor contract renewals.
+
+1. Match every signal to an account on my list.
+2. Rank the accounts by how many signals they have, then by tier.
+3. For the top 25, write:
+   - one line on why they're on the list today
+   - the best contact to email (name, title)
+   - a first email under 65 words that mentions the signal
+     without sounding like we're watching them
+4. Save it as a table I can review.
+
+Send nothing. Keep everything as drafts.
+```
+
 ## 局限
 
 - 这是一家外呼代理机构的推广文章（文末有 DM “RAMP”、预约通话和社群链接），Ramp 的部分来自公开演讲的转述，“80% 团队三个月内取消 AI SDR”“1,100 个积极回复/21 天”“106 个线索/23,418 人”等是作者自家客户数据，无法独立验证。
-- 文中的图片和 prompt 截图接口没有返回，总结只依据文字部分。
+- 文中图片接口没有返回；两段 prompt 已从原文代码块原样补入上方。

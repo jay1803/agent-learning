@@ -96,6 +96,112 @@ Begin. Run the loop until FINAL.
 
 作者随后介绍 Telegram 里的助手 Mira：用自然语言描述就能创建定时或事件触发的“Skill”（例如工作日早 7 点汇总 Gmail 和日历、会前一小时提醒上次对话的要点、转发消息自动建 Linear 工单、周五发团队周报、语音转写、一个想法改写成多平台版本、生成图片视频、打卡、记账式卡路里追踪、机票降价自动购买等）。他称 Mira 通过 Composio 连接 500+ 应用、有跨会话长期记忆、按任务切换 GPT/Claude/Gemini，“ChatGPT 回答，Mira 行动”。结尾的建议：循环不是要强行塞进所有场景的东西，多数时候只会白烧钱，**先用现成免费的，真觉得不够了再想自己到底需要什么**。
 
+## 原文代码块与图表
+
+除正文已收录的自查循环提示词外，原文其余代码块：五步循环、代码循环规格、单次循环的粗略成本、可行顺序，以及 Mira 的 Skill 示例（推广部分）。以下为接口返回的原文，未改动。
+
+```
+DISCOVER  →  work out what needs doing
+PLAN      →  decide how to do it
+EXECUTE   →  do the work
+VERIFY    →  check it against the goal
+ITERATE   →  not there yet? feed the result back in and repeat
+```
+
+```
+▸ LOOP SPEC
+GOAL: every test in /tests/auth passes, lint is clean, no type errors.
+
+EACH ITERATION:
+  1. run the test suite and read every failure
+  2. pick the single highest-impact failure
+  3. write the smallest change that fixes it
+  4. re-run the tests, lint, and type checker
+
+VERIFY: green tests + zero lint warnings + zero type errors
+STOP WHEN: verify passes, OR 8 iterations reached
+ON STOP: summarize what changed and what still fails
+```
+
+```
+▸ ROUGH COST OF ONE LOOP
+single agent, one medium task:      ~50,000 – 200,000 tokens
+context re-sent every iteration:    grows each pass
+a fleet of agents in parallel:      multiply all of the above
+```
+
+```
+1. Get ONE manual run reliable first.
+2. Turn that into a skill (save the instructions).
+3. Wrap the skill in a loop (add the gate + stop condition).
+4. THEN put it on a schedule.
+```
+
+```
+▸ SKILL
+"Every weekday at 7am, check my Gmail and Google Calendar.
+Send me a short brief: my 3 most important meetings, anything
+urgent in the inbox, and one thing I said I'd follow up on but
+haven't. Keep it under 120 words."
+```
+
+```
+▸ SKILLS
+"An hour before each meeting, remind me with the context and
+decisions from our last conversation with that person."
+
+"When I forward a message here, turn it into a Linear ticket
+with the right priority and assign the owner."
+
+"Every Friday at 4pm, collect the team's task status and metrics
+and post a clean weekly digest in our chat."
+
+"Summarize everything I missed in this group chat while I was
+away, in 5 bullets."
+```
+
+```
+▸ SKILLS
+"I'll send a voice note with a raw idea. Turn it into a finished
+post with a caption and hashtags."
+
+"Take this one idea and write versions for X, Instagram, LinkedIn,
+Email, and a newsletter, each in the right format."
+
+"Generate 3 image options for this post."
+
+"Turn this image into a short video for my Telegram channel."
+```
+
+```
+▸ SKILLS
+"Transcribe my voice messages into clean text."
+"Read this article back to me as audio."
+"Summarize the voice notes in this group chat into key points."
+```
+
+```
+▸ SKILLS
+"Every evening at 7, ask if I trained today. Keep a streak and
+don't let me quietly skip more than one day."
+
+"Every night, ask me 3 questions about my day, remember the
+answers, and once a week tell me what changed."
+
+"Track my calories from a photo of my plate."
+
+"Watch this flight route and buy when the price drops to my number."
+
+"Every morning, give me a no-clickbait news digest on my topics."
+```
+
+```
+@mira, plan my week
+@mira, summarize this chat
+@mira, remind me to review PRs every Monday at 9am
+@mira, write a post about [topic] for X and Instagram
+```
+
 ## 局限
 
 - 前半篇的框架（验证/状态/停止条件、四条门槛、成本按上下文复利、看采纳率、先手动后自动的顺序）清晰实用；但后半篇几乎全是 Mira 的产品推广，并带有作者 X 与 Telegram 的导流。Mira 的各项能力、“六天重写代码库”等说法未给出处或数据，无法核实。

@@ -75,7 +75,30 @@ author: "Sergii Makarevych"
 - 代码优先适合有工具和状态的 agent，配置优先适合基准数字与快速矩阵；基准 harness 买到可比性，买不到调试和闸门；平台买到版本化数据、对比、闸门和线上回路，买不到统计重复；trace 优先的工具需要显式评委加阈值；RAG 指标买到的是故障定位，要分开跑检索与生成检查并配合一个管历史的回路。
 - 每条规则都要能改变构建内容或阻止合并，不改变行为的规则就删掉。
 
+## 原文代码块与图表
+
+原文的 16 个框架对比总表（定义方式、评估层级、稳定性与闸门、局限）。以下为接口返回的原文，未改动。
+
+| Framework | How defined | Levels graded | Stability and gates | Limit |
+|---|---|---|---|---|
+| Inspect | Python Task | final, steps, conversation, system | repeats, reducers, limits; logs, rescore | metrics hand-built; no prod loop |
+| DeepEval | Python tests | final, trajectory, step, RAG, conversation | reruns, flaky marks; pytest gates | needs its tracing; no sandbox, no repeats |
+| Pydantic Evals | Typed Python | final, tool, path, report, live sample | reruns; assertion gates, Logfire compare | local tools only; thin ready metrics |
+| SkillEvaluator | CLI plus templates | skill file, loading, overlap, with-without | three tiers gate; CI templates | new, experimental, skill-only |
+| lm-harness | YAML task | final output only | repeats, seeds, cache; no gates | no agents, judges, tracing, prod loop |
+| Promptfoo | YAML matrix | final, tool, trajectory, RAG, conversation | retries, cache; CI action | local results; weak repetition stats |
+| OpenAI Evals | YAML registry | single completion | sampling only; log reports | retiring; shallow agent support |
+| HELM | taxonomy | any level, multi-metric | standardized conditions; leaderboards | maintenance mode; no gating use |
+| Braintrust | code plus playground | final, span, trace, session, cost | sampling, retries; experiments, rules, CI | no repeat stats; hosted core |
+| MLflow GenAI | Python plus server | final, tool, multi-turn, RAG, system | alignment to people; pytest gates | needs server plus SQL storage |
+| Langfuse | clicks plus code | observation, trace, session, dataset run | rerun vs pinned data; CI action, alerts | thin metric library |
+| LangSmith | code plus interface | single, thread, session | reruns; pytest adapters, assertions | hosted-only |
+| Phoenix | code plus interface | span, trajectory, thread | reruns; sortable tables, attach later | scripted online loop; no gate action |
+| TruLens | code | retrieval edges, agent behavior, safety | reruns; dashboards, leaderboards | thin platform loop |
+| Evidently | Python plus reports | row plus dataset rollup | test suites; automation-ready reports | no trajectory; dataframe debugging |
+| Ragas | Python metrics | retriever alone, generator alone | reruns; hand-written gates | no history, tracing, or prod loop |
+
 ## 局限
 
 - 全部来自公开文档的综述，没有实测，厂商数字（如 SkillEvaluator 的 500+ 规则、Evidently 的 100+ 检查）只是声称；作者也特别说明没有跑一个贯穿案例，是怕团队把它当模板照抄。
-- 对比表格没有通过接口返回，总结只依据文字部分。
+- 对比总表已从原文补入上方，其余配图接口没有返回。

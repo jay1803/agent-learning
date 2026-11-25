@@ -44,7 +44,134 @@ author: "Codez"
 - 咨询或善于沟通的人：面试正是为筛掉“会说不会写”的人设计的，准备重心是一个交付、维护并公开记录的系统。
 - 已经和业务部门坐在一起的内部平台工程师：你可能已经在做 FDE 的事，用“改变了哪些流程、省了多少工时、绕过了哪些约束”重写经历。
 
+## 原文代码块与图表
+
+原文 5 段代码块：技能自评清单、FDE 交付的 MCP server 示例、用 subagent 梳理陌生代码库的会话、按 FDE 复盘格式写的部署报告、客户访谈轮的提问清单。以下为接口返回的原文，未改动。
+
+```python
+# Rate 1-5. Anything below 3 is your next month of work.
+
+## Engineering breadth          # solid, not elite
+[ ] Python // backend, scripts, data
+[ ] TypeScript // integrations + a usable frontend
+[ ] One cloud, deployed something real to it
+[ ] One database, can debug it under pressure
+[ ] Can stand up a working UI in a day
+
+## AI native                     # ship, don't train
+[ ] Prompt engineering beyond trial and error
+[ ] Model APIs: streaming, tool use, token budgets
+[ ] RAG // and knowing when retrieval is the WRONG answer
+[ ] Structured outputs + schema validation
+[ ] Evals // the layer that separates demo from production
+[ ] One agent framework, something actually built
+
+## The half nobody practices
+[ ] Ran a workshop with a non-technical stakeholder
+[ ] Said "we should not build that" to a paying customer
+[ ] Expressed your work in dollars or hours saved
+[ ] Learned an unfamiliar industry well enough to ship in it
+```
+
+```python
+# The artifact an FDE actually ships: Claude, wired into a system
+# nobody designed for it. Legacy API, no docs, one guy who knows it.
+
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("warehouse-ops")
+
+@mcp.tool()
+def find_stalled_shipments(hours_stalled: int = 24) -> list[dict]:
+    """Shipments with no scan event in N hours. Use when ops asks
+    what is stuck, or before a customer escalation review."""
+    # The real work: their legacy schema, their timezone quirk,
+    # their soft-delete column that nobody documented.
+    return query(STALLED_SQL, hours_stalled)
+
+@mcp.tool()
+def reroute(shipment_id: str, hub: str, reason: str) -> dict:
+    """Reroute a shipment. Writes an audit row — compliance
+    requires a reason string on every manual intervention."""
+    return post_with_audit(shipment_id, hub, reason)
+
+# Note what makes this an FDE artifact and not a demo:
+#   - docstrings say WHEN to use the tool, not just what it does
+#   - the audit row exists because their compliance team requires it
+#   - the schema quirks are handled here, not left for the model
+```
+
+```python
+› Use a subagent to map how orders flow from intake to fulfillment in 
+this repo. I need the data model, the integration points, and anywhere 
+state can be written twice. Write it to notes/orders.md. 
+
+● Spawning research subagent · separate context window 
+● Read 23 files · 41.2k tokens — none of it in your window 
+
+✓  Returned 680-token summary → notes/orders.md Found: intake writes to `orders` AND `legacy_orders`. Reconciliation job runs 
+nightly. Anything failing between 18:00 and the 02:00 job is invisible to ops.
+
+ › That gap is the customer's actual complaint. Draft the MCP tool 
+that surfaces those in-flight orders, then we walk ops through it. 
+day 2. the previous vendor took six weeks to find this.
+
+```
+
+```python
+# Dispatch triage for a 14-van plumbing company
+// Structure this like an FDE post-mortem, not a project README.
+
+## The workflow before
+Dispatcher spent ~2.5h/day reading job notes and reassigning vans.
+Two people quit over it in a year. Nobody had ever timed it.
+
+## Constraints I could not change
+- Scheduling data lives in a hosted tool with a read-only API.
+- Dispatcher will not use a new app. It had to live in SMS.
+- Owner would not approve anything touching customer payment data.
+
+## What I deliberately did NOT build
+Auto-reassignment. They didn't trust it and would have turned it
+off in week one. Suggestion + one-tap approve instead.
+// Being right about this mattered more than the model choice.
+
+## What broke in week two
+Job notes had inconsistent van nicknames ("big blue" vs "V-3").
+Fixed with an alias table the dispatcher edits herself.
+// This is the part that separates shipped from demoed.
+
+## After
+~40 min/day. Ran 5 months. She still uses it. Owner added 2 vans.
+```
+
+```python
+# Run the round like a researcher. Solving too early is the tell.
+
+## Surface the real constraints
+- What have you already tried here, and why did it stop?
+  // failed deployments hide every constraint that matters
+- What can't change no matter what we build?
+  // compliance, latency, data residency, the union contract
+- Who has to approve this, and what will they object to?
+
+## Find the actual workflow
+- Walk me through the last time this went wrong.
+- Who does this today, and what does it cost them per week?
+- What happens downstream if we get it wrong at 3am?
+
+## Define "good enough" — theirs, not yours
+- What accuracy would make you turn this off?
+- How will you know in 90 days whether this worked?
+- What does the person doing this today do instead, after?
+
+## Close the loop
+- Reflect back what you heard. Get it corrected.
+- Name what you would NOT build, and why.
+// Saying "we shouldn't build that" is a senior signal, not a dodge.
+```
+
 ## 局限
 
 - 这是一篇职业指南兼 Substack 推广，很多数字（$785K、729%、60% 淘汰率、73% 的调查）没有给出来源细节，无法独立核实；“六种起点”的对应背景是我根据内容归纳的，原文每条只有一句标题式开头。
-- 文中配图接口没有返回，总结只依据文字部分。
+- 文中配图接口没有返回；5 段代码块已从原文原样补入上方。

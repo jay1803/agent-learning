@@ -65,3 +65,301 @@ author: "Shann Holmberg"
 ## 作者的落地建议
 
 给自己真实的任务（有截止时间、有要求、有人会用结果）建工作流，记录自己每次介入的地方，这些就是该改进的点；再换一个 campaign 或周期重跑，检验是否可复用，还是依赖上一轮对话里埋着的指令。稳定后再往后接：研究喂 brief、brief 喂生产、结果喂下一轮规划。保存 brief、工作流、示例输出和结果，记下仍需人介入、失败和改动的部分，既便于迭代，也能给同事展示。
+
+## 原文代码块与图表
+
+原文 23 段代码块与表格：角色来源、术语、工作区目录结构、知识与数据流、工具连接、campaign 目录、工单与依赖、循环检查流程、两段 /goal 提示词、一份工单模板、定时任务与工作流清单，以及出问题时该查什么。以下为接口返回的原文，未改动。
+
+| draws from | how it helps you build |
+|---|---|
+| product marketing | give agents the customer, positioning and offer context they need |
+| content & creative | define voice, provide examples and review the assets produced |
+| growth & performance | build workflows around campaign tests and measurable outcomes |
+| marketing ops & automation | connect tools and define how work moves between them |
+| analytics | give agents reliable data and check their interpretation of results |
+| engineering | connect APIs, write code with agents and test workflows |
+
+| term | what it means |
+|---|---|
+| model | the AI you choose for a task, such as researching, planning or writing |
+| harness | the software around the model that gives it access to files, tools and code execution, and controls what it can do |
+| ADE | Agent Development Environment: the interface where you work directly with agents, review their actions and guide the work |
+
+```markdown
+marketing/
+├── shared-knowledge/
+├── content/
+│   ├── knowledge/
+│   ├── work/
+│   ├── workflows/
+│   ├── skills/
+│   ├── agents/
+│   ├── scripts-and-code/
+│   ├── outputs/
+│   └── results-and-learnings/
+├── seo-aeo/
+├── outbound/
+├── paid-and-creative/
+└── lifecycle-and-cro/
+```
+
+| area | what belongs here |
+|---|---|
+| shared knowledge | company information used across verticals: product, audience, positioning and brand guidelines |
+| vertical knowledge | relevant research, examples and guidance, such as a voice guide or SEO research |
+| work | active campaigns, briefs, plans and work in progress |
+| workflows | the steps and connections that take a task from its inputs to a finished output |
+| skills, agents & code | reusable instructions, agent definitions and scripts those workflows use |
+| outputs | the assets and deliverables produced |
+| results & learnings | performance reports, feedback and findings worth using again |
+
+```markdown
+SHARED KNOWLEDGE          CAMPAIGN CONTEXT
+audience + offer         brief + research
+        │                       │
+        └───────────┬───────────┘
+                    ↓
+              WORKFLOW RUN
+                    ↓
+             drafts + review
+                    ↓
+            approved deliverables
+                    ↓
+             campaign results
+                    ↓
+          findings + your feedback
+                    ↓
+        context for the next campaign
+```
+
+| connection | what it makes possible |
+|---|---|
+| X API | research posts and retrieve available performance data |
+| Typefully API | create drafts and schedule approved content |
+| research tools and skills | investigate topics, competitors and conversations beyond your own accounts |
+| your data warehouse | query the data you’ve collected across marketing sources |
+
+| internal context | external context |
+|---|---|
+| product details, offers and positioning | competitor products, offers and campaigns |
+| customer calls, CRM notes and support conversations | public discussions, reviews and customer questions |
+| your expertise, examples and input during planning | industry research and market developments |
+| previous campaigns, warehouse data and results | search demand and keyword research |
+
+```markdown
+shared-knowledge/
+├── audience.md
+├── product-and-offer.md
+└── positioning.md
+
+paid-and-creative/knowledge/
+├── customer-objections.md
+├── approved-claims.md
+└── creative-test-learnings.md
+```
+
+```markdown
+┌───────────────────────────────────────────────┐
+│ RESEARCH                                      │
+│ Save the finding, source and date.            │
+│ Label unverified claims.                      │
+└───────────────────────┬───────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────┐
+│ YOUR REVIEW                                   │
+│ Check the evidence and campaign relevance.    │
+│ Record your decision and its reason.          │
+└───────────────────────┬───────────────────────┘
+                        │
+            ┌───────────┴─────────────┐
+            ▼                         ▼
+┌───────────────────────┐ ┌───────────────────────┐
+│ CAMPAIGN KNOWLEDGE     │ │ SHARED KNOWLEDGE       │
+│ Findings for this     │ │ Reviewed findings     │
+│ campaign.             │ │ useful across         │
+│                       │ │ campaigns.            │
+└───────────────────────┘ └───────────────────────┘
+```
+
+| source | what it can contribute |
+|---|---|
+| ad platform | campaigns, ads, spend, impressions and clicks |
+| website analytics | visits, landing-page activity and tracked conversions |
+| CRM | lead quality, sales outcomes and revenue |
+| experiment records | the audience, offer and creative angle tested |
+
+```
+┌────────────────────────┐    ┌────────────────────────┐    ┌────────────────────────┐    ┌────────────────────────┐    ┌────────────────────────┐
+│ CHANNEL DATA           │    │ SCRIPT                 │    │ WAREHOUSE              │    │ AGENT ANALYSIS         │    │ YOUR REVIEW            │
+│                        │    │                        │    │                        │    │                        │    │                        │
+│ ads, analytics + CRM   ├───▶│ fetch + check records  ├───▶│ linked campaign data   ├───▶│ read data + context    ├───▶│ check the evidence     │
+│ activity + results     │    │ update stored data     │    │ queryable history      │    │ propose next tests     │    │ choose the next tests  │
+│                        │    │                        │    │                        │    │                        │    │                        │
+└────────────┬───────────┘    └────────────────────────┘    └────────────────────────┘    └────────────────────────┘    └────────────┬───────────┘
+             ▲                                                                                                                       │
+             │                                                                                                                       │
+             │                                                                                                                       ▼
+┌────────────┴───────────┐                                  ┌────────────────────────┐                                  ┌────────────┴───────────┐
+│ CAMPAIGN EXECUTION     │                                  │ NEXT CAMPAIGN BRIEF    │                                  │ SAVE                   │
+│                        │                                  │                        │                                  │                        │
+│ run approved tests     ◀──────────────────────────────────┤ use saved findings     ◀──────────────────────────────────┤ record decisions       │
+│ generate new results   │                                  │ plan + approve tests   │                                  │ link the evidence      │
+│                        │                                  │                        │                                  │                        │
+└────────────────────────┘                                  └────────────────────────┘                                  └────────────────────────┘
+```
+
+```markdown
+AD PLATFORM + WEBSITE ANALYTICS + CRM
+                    ↓
+        scheduled collection and updates
+                    ↓
+              DATA WAREHOUSE
+                    ↓
+       campaign analysis and creative briefs
+```
+
+```md
+/goal prepare a creative brief for the next round of paid ads.
+
+use audience.md, approved-claims.md, campaign-book/
+and previous-test-results.md as context.
+
+research and propose 3 angles. explain who each angle is for,
+what informed it and how it differs from previous tests.
+link the supporting sources and flag assumptions.
+
+check each angle against the audience and approved claims.
+save the brief to creative-brief.md in the campaign folder.
+
+stop when the brief is ready for my review.
+do not produce or publish ads. ask if required context is missing.
+```
+
+```markdown
+campaign/
+├── brief.md              ← audience, offer, goal
+├── campaign-book/        ← approved visual direction
+├── research/             ← shared across channels
+├── tickets/              ← tasks and dependencies
+├── landing-page/
+├── paid/
+├── email/
+└── results/              ← informs the next campaign
+```
+
+```markdown
+APPROVED CAMPAIGN BOOK
+references + layouts + product images
+                 │
+         ┌───────┴────────┐
+         ↓                ↓
+    coded layouts    image generation
+    page / ad / email  product / scene
+         │                │
+         └───────┬────────┘
+                 ↓
+        assembled campaign designs
+                 ↓
+         your visual review
+                 ↓
+          approved variations
+```
+
+| vertical | what its workflow produces | context it needs |
+|---|---|---|
+| landing page / CRO | page copy, page build and tracking setup | offer, audience, approved claims and conversion goal |
+| paid & creative | ad concepts, assets and test plan | campaign messaging, budget, previous tests and landing page |
+| content | launch posts and supporting assets | campaign angles, product details and channel examples |
+| lifecycle / email | launch and follow-up sequences | offer, audience segments, timing and signup events |
+| outbound | prospect research and outreach drafts | account criteria, buying signals and approved messaging |
+
+| ticket | depends on | status |
+|---|---|---|
+| approve campaign offer | customer and competitor research | needs my input |
+| build landing page | approved offer and campaign book | waiting |
+| produce paid creative | approved offer and campaign book | waiting |
+| check ad-to-page consistency | landing page and paid creative | waiting |
+
+```md
+# produce the paid creative set
+
+assigned to: paid creative agent
+status: waiting for approval of the offer and campaign book
+
+## before starting
+confirm the offer and campaign book are approved.
+use creative-brief.md for the angles, formats and deliverables.
+use approved-claims.md for what the ads can promise.
+
+## produce
+- editable designs following the campaign book
+- exports in each format specified in the brief
+- a review report linking each ad to its angle and checks
+
+## ready for my review when
+- [ ] every deliverable in the brief is accounted for
+- [ ] claims match approved-claims.md
+- [ ] formats and dimensions match the brief
+- [ ] exported images have readable text and accurate product details
+- [ ] designs, exports and review report are linked in this ticket
+
+## update this ticket
+if blocked, name the missing input or decision.
+otherwise, mark ready for review. do not publish.
+```
+
+```markdown
+READY TICKET
+     ↓
+create or revise ←──────────────┐
+     ↓                         │
+run checks                     │
+     ├── fail → specific fixes ┘
+     │          within retry budget
+     ├── blocked / budget reached → ask for input
+     │
+     └── pass → ready for your review
+                        │
+             ┌──────────┴──────────┐
+             ↓                     ↓
+       request changes          approve
+       → revise again           → next task
+```
+
+```md
+/goal produce the paid creative set listed in campaign-plan.md.
+
+use campaign-book.md and approved-claims.md.
+run the checks in creative-checklist.md.
+fix failed checks and save the exports with a review report.
+
+stop when the checks pass and the set is ready for my review.
+do not publish. ask if an unresolved decision blocks progress.
+```
+
+| recurring job | what it does | where the result goes |
+|---|---|---|
+| daily data update | collect new campaign records and refresh performance metrics | data warehouse |
+| weekly competitor review | research changes to relevant offers, ads and landing pages | research files and a team summary |
+| weekly campaign report | compare performance with campaign goals and flag questions | campaign ticket and Slack |
+| pre-launch check | check scheduled assets for dates, links and offer consistency | review report |
+
+| workflow | how it works |
+|---|---|
+| **competitor website monitoring** | collect competitor pages on a schedule → detect changes → have an agent explain what changed → send a briefing with source links |
+| **competitor creative library** | collect new competitor ads → transcribe videos and analyze images → save searchable references → use them alongside customer research when developing campaign angles |
+| **podcast-to-team content** | collect transcripts from selected industry podcasts → extract relevant insights → combine them with each team member’s expertise → draft posts for review → schedule approved content |
+| **SEO production** | research keywords and competing pages → develop the angle with your input → create the outline, draft and visuals → run writing and visual checks → prepare for publishing |
+| **paid ad creative and testing** | review previous campaign results, customer objections and competitor ads → propose test angles → produce assets using the campaign book → approve and launch → feed results into the next brief |
+| **content repurposing** | take an approved article, webinar or interview → identify ideas worth adapting → create channel-specific posts, emails and clips → check accuracy and formatting → review and schedule |
+| **email campaign production** | combine the offer, audience segments and customer questions → plan the sequence → draft copy and layouts → check links, timing and segment rules → approve sending → review results |
+| **landing-page production and testing** | combine the campaign brief, incoming ad messages and customer objections → build the page → check design, forms and tracking → approve launch → use results to propose the next test |
+| **creator campaign research** | research relevant creators → compare audience fit, previous results and rates → prepare a shortlist and briefs → approve partnerships → track delivery and performance |
+
+| what happened | what to investigate |
+|---|---|
+| the research covered irrelevant companies | selection criteria and research instructions |
+| recommendations missed an important customer objection | available customer context |
+| the report used old numbers | data updates and freshness checks |
+| the output looked correct but wasn’t useful | the brief and how you defined a good result |

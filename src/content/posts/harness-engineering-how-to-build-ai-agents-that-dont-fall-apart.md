@@ -35,9 +35,186 @@ author: "rari"
 
 ## 结论
 
-prompt 工程告诉模型做什么，context 工程决定模型看到什么，**harness 工程构建模型行动的世界**。模型下个月可能就换了，但工具、测试、状态、策略和 trace 可以持续积累，所以持久优势正在从 prompt 移到系统本身。作者附有一份上线前的检查清单（接口未返回具体条目），并给出判断：如果其中好几项答案是否，换更强的模型也不会让系统可靠，只会让失败更贵。
+prompt 工程告诉模型做什么，context 工程决定模型看到什么，**harness 工程构建模型行动的世界**。模型下个月可能就换了，但工具、测试、状态、策略和 trace 可以持续积累，所以持久优势正在从 prompt 移到系统本身。作者附有一份上线前的检查清单（清单原文见下方“原文代码块与图表”），并给出判断：如果其中好几项答案是否，换更强的模型也不会让系统可靠，只会让失败更贵。
+
+## 原文代码块与图表
+
+原文 16 段代码块：模型与 harness 的分工、请求契约、AGENTS.md 地图、工具权限表、持久状态、各类产出的传感器、权限流程、trace 字段、“规则写两遍”示例、有界重试循环、失败类型对应的 harness 修补、大脑/双手/历史、变更回执、harness 成熟度分级、上线前检查清单，以及 prompt 到 graph 的层次。以下为接口返回的原文，未改动。
+
+```
+MODEL
+reasons and proposes actions
+
+HARNESS
+selects context
+exposes tools
+stores state
+enforces permissions
+checks results
+records traces
+recovers from failure
+```
+
+```
+{
+  "goal": "ship the feature",
+  "inputs": ["issue", "repository", "design"],
+  "output": "reviewable pull request",
+  "constraints": ["no schema changes", "preserve public API"],
+  "done_when": ["tests pass", "visual check passes", "review passes"]
+}
+```
+
+```
+AGENTS.md
+  -> architecture map
+  -> testing map
+  -> product rules
+  -> security rules
+  -> task-specific guides
+```
+
+```
+READ FILES       allowed by default
+RUN TESTS        allowed inside sandbox
+WRITE FILES      allowed inside workspace
+ACCESS NETWORK   scoped by task
+DEPLOY           requires approval
+DELETE DATA      requires approval
+```
+
+```
+{
+  "task_id": "task_042",
+  "current_step": "verify_ui",
+  "artifacts": ["build.zip", "report.md", "screenshot.png"],
+  "decisions": ["keep existing schema"],
+  "failures": ["mobile overflow at 390px"],
+  "pending": ["human approval"]
+}
+```
+
+```
+CODE       -> tests + type checks + lint
+UI         -> render + screenshot + visual inspection
+RESEARCH   -> source check + contradiction check
+DATA       -> schema + range + freshness checks
+```
+
+```
+MODEL SUGGESTS -> POLICY CHECKS -> TOOL EXECUTES
+```
+
+```
+request
+selected context
+tool calls
+state changes
+verification results
+retries
+cost
+final artifact
+rollback point
+```
+
+```
+GUIDE
+"UI code may not query the database directly"
+
+CHECK
+lint fails when UI imports the repository layer
+```
+
+```
+for (let attempt = 1; attempt <= 3; attempt += 1) {
+  const artifact = await build(state)
+  const evidence = await verify(artifact)
+
+  if (evidence.pass) return artifact
+
+  state.failures.push(evidence.gap)
+  state.repair = evidence.repair
+}
+
+return requestHumanReview(state)
+```
+
+```
+MISSING CONTEXT   -> add a map or retrieval rule
+WRONG TOOL        -> improve tool description or routing
+BAD OUTPUT        -> add a validator or stronger contract
+REPEATED LOOP     -> add a retry cap and escalation
+UNSAFE ACTION     -> add a permission gate
+LOST DECISION     -> store it in durable state
+UNKNOWN FAILURE   -> add tracing and evidence capture
+```
+
+```
+BRAIN
+the model that reasons
+
+HANDS
+the sandbox and tools that act
+
+HISTORY
+the append-only record of what happened
+```
+
+```
+{
+  "context_sources": ["issue", "repo_map", "design_spec"],
+  "policy_version": "v12",
+  "model_route": "complex_coding",
+  "tools_used": ["shell", "browser", "tests"],
+  "tests": { "passed": 42, "failed": 0 },
+  "human_corrections": 1,
+  "retries": 2,
+  "cost_usd": 3.84,
+  "accepted_artifact": "pr_1842",
+  "rollback_point": "commit_7f3a"
+}
+
+```
+
+```
+LEVEL 0
+prompt + model
+
+LEVEL 1
+project guide + tools
+
+LEVEL 2
+structured state + tests + bounded loop
+
+LEVEL 3
+permissions + traces + recovery + human gates
+```
+
+```
+[ ] Is success defined before execution begins
+[ ] Can the agent find the right project knowledge without loading everything
+[ ] Does every tool have a clear contract and failure state
+[ ] Is execution isolated from production systems
+[ ] Are important decisions stored outside the conversation
+[ ] Does every risky transition have evidence
+[ ] Are irreversible actions protected by approval
+[ ] Does every loop have a retry cap and budget
+[ ] Can the run resume after interruption
+[ ] Can you explain every tool call and state change
+[ ] Does failure update a guide, test, tool, or policy
+[ ] Can the final artifact be rolled back
+
+```
+
+```
+PROMPT      -> instruction
+CONTEXT     -> working view
+HARNESS     -> operating system
+LOOP        -> local improvement
+GRAPH       -> coordination
+```
 
 ## 局限
 
 - 这是一篇观点与框架类文章，没有作者自己的实验数据，论据主要来自 OpenAI、Anthropic 的公开文章和一句 Dario Amodei 的引语。文末是 Substack、Telegram 的推广。
-- 文中的契约示例、目录地图、工具接口、trace 格式、检查清单等多张图表接口没有返回，总结只依据文字部分。
+- 文中配图接口没有返回；契约示例、权限表、trace 格式、检查清单等 16 段代码块已从原文原样补入上方。
