@@ -55,7 +55,7 @@ HANDS    sandboxes and tools             execute it
 SESSION  an append-only event log        remembers what happened
 ```
 
-运行环境的八项职责从验收开始。**第一项是把请求写成契约。** 工单 #412 要修复邮箱包含大写字母时无法登录的问题，数据库模式和公开 API 保持不变，只允许改 `src/auth/service.ts` 与 `tests/auth/login-uppercase.test.ts`。先写 `test_login_uppercase_email`，用同一个测试证明修复前失败、修复后通过，再检查全量测试、lint、类型和实际变更范围。运行预算也可写入约束。缺少契约就容易出现**目标漂移**，智能体改去解决一个更容易的问题，仍然能报完成。Anthropic 的长任务环境由首个会话建立 `feature_list.json`，持久保存每项功能的验收状态。所有功能的 `passes` 初始为 `false`，后续会话只允许翻转这一字段。它明确禁止删除或修改测试，以免掩盖功能缺失或缺陷。选用 JSON 也是为了保护契约，因为模型较少不恰当地覆盖这种文件。
+运行环境的八项职责从验收开始。**第一项是把请求写成契约**。 工单 #412 要修复邮箱包含大写字母时无法登录的问题，数据库模式和公开 API 保持不变，只允许改 `src/auth/service.ts` 与 `tests/auth/login-uppercase.test.ts`。先写 `test_login_uppercase_email`，用同一个测试证明修复前失败、修复后通过，再检查全量测试、lint、类型和实际变更范围。运行预算也可写入约束。缺少契约就容易出现**目标漂移**，智能体改去解决一个更容易的问题，仍然能报完成。Anthropic 的长任务环境由首个会话建立 `feature_list.json`，持久保存每项功能的验收状态。所有功能的 `passes` 初始为 `false`，后续会话只允许翻转这一字段。它明确禁止删除或修改测试，以免掩盖功能缺失或缺陷。选用 JSON 也是为了保护契约，因为模型较少不恰当地覆盖这种文件。
 
 ```json
 {
@@ -71,7 +71,7 @@ SESSION  an append-only event log        remembers what happened
 }
 ```
 
-**第二项是给智能体一张一屏能读完的仓库地图。** 根目录的 `CLAUDE.md` 或 `AGENTS.md` 用五行交代项目用途，再给出启动、测试和 lint 命令，标明材料位置、代码里看不出来的约定以及深入文档的入口。Codex 默认把拼接后的项目说明限制在 32 KiB，根文件长到 900 行时，可以按路径拆开并按需加载。Claude Code 团队同样把提示保持简短，让实际文件承载详细知识。
+**第二项是给智能体一张一屏能读完的仓库地图**。 根目录的 `CLAUDE.md` 或 `AGENTS.md` 用五行交代项目用途，再给出启动、测试和 lint 命令，标明材料位置、代码里看不出来的约定以及深入文档的入口。Codex 默认把拼接后的项目说明限制在 32 KiB，根文件长到 900 行时，可以按路径拆开并按需加载。Claude Code 团队同样把提示保持简短，让实际文件承载详细知识。
 
 ```plaintext
 CLAUDE.md / AGENTS.md
@@ -82,7 +82,7 @@ CLAUDE.md / AGENTS.md
   pointers to deeper docs
 ```
 
-**第三项是设计智能体与计算机的交互界面（ACI）。** Anthropic 在《Building effective agents》里说，做 SWE-bench 时花在工具上的时间超过了优化整体提示词的时间。模型切换目录后反复弄错相对路径，他们将工具改为只接收绝对路径，错误随即消失。工具应使用 `github_search_issues` 这种带命名空间的名称，只返回有用字段，限制响应长度，并在错误信息里交代发生了什么、可以尝试什么。文章给出的 Claude Code 默认工具输出上限是 25,000 个词元。Anthropic 在自己的研究系统评估中仅改写工具描述，就缩短了 40% 的任务完成时间。IssueBot 的测试报告如果有 6,000 行，而真正的错误在第 4,812 行，模型就得为寻找一条断言读整份报告。更合适的输出先报总数，再只列失败项，把 `ERROR` 和原因放在同一行。Nicholas Carlini 为编译器智能体整理测试输出，也是为了防止“上下文窗口污染”。
+**第三项是设计智能体与计算机的交互界面（ACI**）。 Anthropic 在《Building effective agents》里说，做 SWE-bench 时花在工具上的时间超过了优化整体提示词的时间。模型切换目录后反复弄错相对路径，他们将工具改为只接收绝对路径，错误随即消失。工具应使用 `github_search_issues` 这种带命名空间的名称，只返回有用字段，限制响应长度，并在错误信息里交代发生了什么、可以尝试什么。文章给出的 Claude Code 默认工具输出上限是 25,000 个词元。Anthropic 在自己的研究系统评估中仅改写工具描述，就缩短了 40% 的任务完成时间。IssueBot 的测试报告如果有 6,000 行，而真正的错误在第 4,812 行，模型就得为寻找一条断言读整份报告。更合适的输出先报总数，再只列失败项，把 `ERROR` 和原因放在同一行。Nicholas Carlini 为编译器智能体整理测试输出，也是为了防止“上下文窗口污染”。
 
 ```plaintext
 NAMES    namespaced: github_search_issues, not search
@@ -91,7 +91,7 @@ SIZE     capped (Claude Code caps tool output at 25,000 tokens by default)
 ERRORS   what went wrong and what to try next
 ```
 
-**第四项是管理模型的注意力预算。** 契约、地图和当前步骤常驻，文件、文档、技能与搜索结果先用路径、URL 或查询条件引用，再按需加载。沿用同一段对话时，轮次越多、工作质量越差，就是**上下文退化**。窗口将满时压缩旧轮次，需要重整上下文时开启新会话，子智能体用自己的窗口探索，回传 1–2K 个词元的结果。秘密、原始日志和整份目录留在窗口之外。文章举例说，Codex 在 10 月把 GPT-6.1 Sol 的默认上下文从 272K 提到 500K 个词元以减少压缩，额外容量依然会被无关日志占满。
+**第四项是管理模型的注意力预算**。 契约、地图和当前步骤常驻，文件、文档、技能与搜索结果先用路径、URL 或查询条件引用，再按需加载。沿用同一段对话时，轮次越多、工作质量越差，就是**上下文退化**。窗口将满时压缩旧轮次，需要重整上下文时开启新会话，子智能体用自己的窗口探索，回传 1–2K 个词元的结果。秘密、原始日志和整份目录留在窗口之外。文章举例说，Codex 在 10 月把 GPT-6.1 Sol 的默认上下文从 272K 提到 500K 个词元以减少压缩，额外容量依然会被无关日志占满。
 
 ```plaintext
 ALWAYS     the contract, the map, the current step
@@ -101,7 +101,7 @@ ISOLATED   subagent work: explored in its own window, returned as 1-2K tokens
 NEVER      secrets, raw logs, whole directories "just in case"
 ```
 
-**第五项是持久化可恢复状态。** Anthropic 发现“仅靠压缩还不够”，于是让每个会话结束时用 `claude-progress.txt` 记录进展与下一步，用功能清单保存逐项状态，用带说明的 `git log` 保存实际变更，用 `init.sh` 固化启动方法。运行系统安排新会话先读这些材料、跑一次基本的端到端检查，再开始新工作。IssueBot 在每步开始时读取持久状态，进程重启后也能从记录的步骤继续。示例状态记录工单 #412 正处于 `verify`、已到第 2 次尝试，邮箱应在 `AuthService` 里统一格式，数据库迁移方案因禁止变更模式而被否决，SSO 仍缺少测试覆盖。把否决理由单列出来，能防止压缩后又花一轮尝试同一方案。
+**第五项是持久化可恢复状态**。 Anthropic 发现“仅靠压缩还不够”，于是让每个会话结束时用 `claude-progress.txt` 记录进展与下一步，用功能清单保存逐项状态，用带说明的 `git log` 保存实际变更，用 `init.sh` 固化启动方法。运行系统安排新会话先读这些材料、跑一次基本的端到端检查，再开始新工作。IssueBot 在每步开始时读取持久状态，进程重启后也能从记录的步骤继续。示例状态记录工单 #412 正处于 `verify`、已到第 2 次尝试，邮箱应在 `AuthService` 里统一格式，数据库迁移方案因禁止变更模式而被否决，SSO 仍缺少测试覆盖。把否决理由单列出来，能防止压缩后又花一轮尝试同一方案。
 
 ```plaintext
 claude-progress.txt   what was done and what is next, written at the end of every session
@@ -121,7 +121,7 @@ init.sh               how to start the app, so nobody rediscovers it
 }
 ```
 
-**第六项是先配足观测手段，再扩大自主权。** 代码用测试、类型和 lint 检查，界面要实际启动、点击并截图，API 要向运行中的服务发真实请求，数据要检查模式、值域和新鲜度。Anthropic 发现实际测试工具显著改善了长任务的表现，默认的单元测试和 `curl` 会漏掉只有走完整个流程才能发现的问题。其浏览器工具看不到警告弹窗，依赖弹窗的功能因此留下更多缺陷。Carlini 的智能体难以判断测试耗时，他便给运行器加入 `--fast`，随机跑 1% 或 10% 的测试。IssueBot 的全绿也只能说明已观测路径通过，套件没走过启用 SSO 的登录流程，就拿不出那条路径的证据。
+**第六项是先配足观测手段，再扩大自主权**。 代码用测试、类型和 lint 检查，界面要实际启动、点击并截图，API 要向运行中的服务发真实请求，数据要检查模式、值域和新鲜度。Anthropic 发现实际测试工具显著改善了长任务的表现，默认的单元测试和 `curl` 会漏掉只有走完整个流程才能发现的问题。其浏览器工具看不到警告弹窗，依赖弹窗的功能因此留下更多缺陷。Carlini 的智能体难以判断测试耗时，他便给运行器加入 `--fast`，随机跑 1% 或 10% 的测试。IssueBot 的全绿也只能说明已观测路径通过，套件没走过启用 SSO 的登录流程，就拿不出那条路径的证据。
 
 ```plaintext
 CODE      tests + types + lint
@@ -130,13 +130,13 @@ API       real requests against a running server
 DATA      schema + ranges + freshness
 ```
 
-**第七项是在模型之外执行权限。** 模型提出动作，运行环境按权限策略决定能否放行，工具执行获准的动作，结果写入日志。Claude Code 按拒绝、询问、允许的顺序处理规则。Codex 用 `sandbox_mode` 控制可操作范围，用 `approval_policy` 决定何时要求批准。两者都提供由第二个模型审查动作的方式，自动审查模型在权限门禁中充当分类器。Cursor 的机制拦住约 4% 的动作，将自主程度形容成“旋钮”，Claude Code 文档也明确说自动模式会减少询问，但无法保证安全。
+**第七项是在模型之外执行权限**。 模型提出动作，运行环境按权限策略决定能否放行，工具执行获准的动作，结果写入日志。Claude Code 按拒绝、询问、允许的顺序处理规则。Codex 用 `sandbox_mode` 控制可操作范围，用 `approval_policy` 决定何时要求批准。两者都提供由第二个模型审查动作的方式，自动审查模型在权限门禁中充当分类器。Cursor 的机制拦住约 4% 的动作，将自主程度形容成“旋钮”，Claude Code 文档也明确说自动模式会减少询问，但无法保证安全。
 
 ```plaintext
 MODEL PROPOSES  ->  POLICY CHECKS  ->  TOOL EXECUTES  ->  RESULT LOGGED
 ```
 
-**第八项是让每次运行留下五分钟内能读完的轨迹。** 轨迹记录契约、加载的上下文、工具调用、状态变化、检查结果、重试、成本和最终产物。Anthropic 逐轮读应用评估器的日志，找出它与人类判断不一致的地方来调校。Cursor 的 Cloud Doctor 读取失败轨迹，直接针对智能体所用的环境开拉取请求。
+**第八项是让每次运行留下五分钟内能读完的轨迹**。 轨迹记录契约、加载的上下文、工具调用、状态变化、检查结果、重试、成本和最终产物。Anthropic 逐轮读应用评估器的日志，找出它与人类判断不一致的地方来调校。Cursor 的 Cloud Doctor 读取失败轨迹，直接针对智能体所用的环境开拉取请求。
 
 SpaceXAI 的 Lauren Tan 用倒金字塔表达规则建设的投入顺序，大部分资源投在上层，底层占最少。两周后，她展示了一个四天完成、产生约 1,150 个拉取请求的游戏副项目。每帧运行的代码以 `.hot.ts` 结尾，lint 禁止这些文件分配内存，文件名给出规则的适用范围，检查器负责执行。IssueBot 可以逐周把三条书面要求做进系统。“不得变更数据库模式”从 `CLAUDE.md` 移到阻止写入 `migrations/` 的工具前钩子。已有测试发生变更且缺少指定标签时，由 CI 判失败。必须走拉取请求的规则由推送拒绝和 GitHub 分支保护落实。每周做一次，持续一个月，文字说明就能主要留给真正需要判断的规则。
 
@@ -187,7 +187,7 @@ no goal      -> the loop optimizes whatever is easiest to measure
 no policy    -> the loop finds the shortcut you did not forbid
 ```
 
-**L0 是秒级的模型与工具内循环。** Claude Code、Codex、Grok Bot 和文中提到的两套智能体 SDK 都自带这层，可以配置工具、权限和最大轮数。停止权在模型手里，模型停止请求工具时，这层就收尾，因此容易提前宣布完成。只有 L0 的 IssueBot 可以读工单、搜索代码、编辑文件并报完成，实际效果还未经独立验证。**L1 把分钟级的验证接在动作后面。** 修改、执行测试或类型检查、lint、构建，读取失败，修复并重新检查。检查越能复现真实问题，修复循环越有方向。检查太弱会放过仍有缺陷的代码，输出过于嘈杂则会消耗模型的阅读预算。
+**L0 是秒级的模型与工具内循环**。 Claude Code、Codex、Grok Bot 和文中提到的两套智能体 SDK 都自带这层，可以配置工具、权限和最大轮数。停止权在模型手里，模型停止请求工具时，这层就收尾，因此容易提前宣布完成。只有 L0 的 IssueBot 可以读工单、搜索代码、编辑文件并报完成，实际效果还未经独立验证。**L1 把分钟级的验证接在动作后面**。 修改、执行测试或类型检查、lint、构建，读取失败，修复并重新检查。检查越能复现真实问题，修复循环越有方向。检查太弱会放过仍有缺陷的代码，输出过于嘈杂则会消耗模型的阅读预算。
 
 ```plaintext
 L0  AGENT LOOP        model -> tool -> result -> model         seconds
@@ -538,11 +538,11 @@ STAGE 4  the graph                              plan, implement, verify, review,
 STAGE 5  triggers + a weekly improvement loop   L4 + L5
 ```
 
-1. **先用单智能体建立地图和契约。** 示例使用 TypeScript、Node 22、Postgres，`CLAUDE.md` 记录 `npm run dev`、`npm test`、单测命令 `npm test -- -t "<name>"`、`npm run lint` 和 `npm run typecheck`。`src/api` 放路由，`src/auth` 放登录、会话和 SSO，`src/ui` 放界面，`migrations/` 禁改，深入内容指向 `docs/architecture.md` 和 `docs/testing.md`。`gh issue view 412 --json title,body` 将工单写入 `.issuebot/issue.json`。第一次 `claude -p` 用 `--allowedTools "Read,Write"` 和 `--permission-mode acceptEdits`，只写 `.issuebot/contract-current.json`，填 `goal`、`constraints`、`files_to_change`、`test_first` 和 `done_when`，前几次由人阅读。第二次调用用 `Read,Edit,Write,Bash,Grep,Glob` 实现，并报告逐项验证方式。此时验证仍主要靠自己的回报。
-2. **把观测接进 L1。** `PostToolUse` 匹配 `Edit|Write`，调用 `lint-check.sh` 运行 `npm run --silent lint`，通过后再跑 `npm run --silent typecheck`。失败时最多回传 20 行匹配 `error` 的信息，退出码 `2` 会反馈错误，已经发生的编辑无法撤销。Stop 调用 `require-green.sh`，用 `npm test --silent` 跑测试，失败时最多回传 15 行匹配 `FAIL`、`ERROR` 或 `expected` 的信息。`stop_hook_active` 让第一次红灯把 Claude 送回去，第二次停止放行，避免钩子无限重入。紧凑报告示例为 `PASS 214 FAIL 2`，两条失败分别是 `tests/auth/login-uppercase.test.ts` 的大写邮箱用例预期 `200`、实际 `401`，以及 `tests/auth/sso.test.ts` 的会话 Cookie 缺少 `secure` 标记。
-3. **加权限、持久状态和轨迹。** 示例允许 `Bash(npm test *)`、`Bash(npm run *)`、`Bash(git diff *)`、`Bash(git status)`，拒绝 `Edit(./migrations/**)`、`Read(./.env)`、`Bash(git push --force *)`、`Bash(git push origin main *)`。`protect-tests.sh` 在 `Edit|Write` 前把目标转成仓库相对路径，再用 `git cat-file -e "main:$rel"` 查询主分支。已有测试必须由人决定能否变更，本轮新增的测试仍可调整。每步开始读持久状态，结束向 JSONL 追加记录。示例在 `2026-11-04T14:02:11Z` 记下 #412 的第 2 次验证失败，耗费 18,234 个词元和 $0.41。`Edit|Write` 钩子看不到由 Bash 发起的编辑，差异检查因此放到外层。
-4. **由 LangGraph 执行门禁和路由。** `plan` 从 `main` 建立 `issuebot/412`、抓标题和正文、让模型写契约。`check_contract()` 要求允许变更的路径在 `src/` 或 `tests/`，拒绝含 `..` 的路径和 `main` 上已有的测试，随后删除原始工单。`implement` 吃进契约、当前验证失败或审查结果，以及此前否决的理由。`verify` 由代码并行执行测试、lint 和类型检查，按实际退出状态汇合。先将新增文件也纳入暂存区，再与 `main` 比较，越出契约或改写旧测试都判失败。验证通过才进入审查，失败最多携带 2,000 字符反馈返回实现，达到五轮预算或连续两轮失败数无下降就转交人。`review` 从 `claude -p --json-schema` 响应的 `structured_output` 取得 `APPROVE` 或 `BLOCKING` 及具体意见，阻断意见写入否决记录，未用完两轮审查预算则回到实现。`open_pr` 先按分支查现有 PR，已有则跳过，否则提交、推送并创建。随后 `gh pr checks --watch` 等待真实 CI，失败则转交，成功才在 `human_gate` 用 `interrupt()` 等待，恢复输入为 `approve` 才走批准路径，合并交给人。`escalate` 发模板工单评论，交代尝试次数并请人接手。`SqliteSaver` 用 `.issuebot/graph.db` 保存检查点，线程 ID 为 `issue-412`，模型成本和检查结果写入轨迹。作者用模拟的 `git`、`gh`、`npm` 和 `claude` 验证了路由、停滞、恢复和差异检查，尚未在真实仓库运行，并提醒按所用版本核对 headless 的返回字段。
-5. **接上触发器和周度改进。** 给 GitHub 工单加 `issuebot` 标签，可由 Claude Code 例程、Grok Bot 例程或 CI 启动工作图。第二个触发器只接收协作者对 IssueBot PR 的新审查评论，用不带工具的 `claude -p --json-schema` 转为修改请求列表，由代码剔除契约外的文件，实施节点只接收过滤后的列表。每周读过去七天的 `.issuebot/traces.jsonl` 和 PR 审查意见，按原因分组统计失败及转交记录，针对首要原因只提一项改动，可选 lint 规则、钩子、技能、`CLAUDE.md` 或工具变更。提案注明运行和轨迹行，在分支上回放最近五条失败工单，报告哪些通过，由人审查提案与回放结果后合并。
+1. **先用单智能体建立地图和契约**。 示例使用 TypeScript、Node 22、Postgres，`CLAUDE.md` 记录 `npm run dev`、`npm test`、单测命令 `npm test -- -t "<name>"`、`npm run lint` 和 `npm run typecheck`。`src/api` 放路由，`src/auth` 放登录、会话和 SSO，`src/ui` 放界面，`migrations/` 禁改，深入内容指向 `docs/architecture.md` 和 `docs/testing.md`。`gh issue view 412 --json title,body` 将工单写入 `.issuebot/issue.json`。第一次 `claude -p` 用 `--allowedTools "Read,Write"` 和 `--permission-mode acceptEdits`，只写 `.issuebot/contract-current.json`，填 `goal`、`constraints`、`files_to_change`、`test_first` 和 `done_when`，前几次由人阅读。第二次调用用 `Read,Edit,Write,Bash,Grep,Glob` 实现，并报告逐项验证方式。此时验证仍主要靠自己的回报。
+2. **把观测接进 L1**。 `PostToolUse` 匹配 `Edit|Write`，调用 `lint-check.sh` 运行 `npm run --silent lint`，通过后再跑 `npm run --silent typecheck`。失败时最多回传 20 行匹配 `error` 的信息，退出码 `2` 会反馈错误，已经发生的编辑无法撤销。Stop 调用 `require-green.sh`，用 `npm test --silent` 跑测试，失败时最多回传 15 行匹配 `FAIL`、`ERROR` 或 `expected` 的信息。`stop_hook_active` 让第一次红灯把 Claude 送回去，第二次停止放行，避免钩子无限重入。紧凑报告示例为 `PASS 214 FAIL 2`，两条失败分别是 `tests/auth/login-uppercase.test.ts` 的大写邮箱用例预期 `200`、实际 `401`，以及 `tests/auth/sso.test.ts` 的会话 Cookie 缺少 `secure` 标记。
+3. **加权限、持久状态和轨迹**。 示例允许 `Bash(npm test *)`、`Bash(npm run *)`、`Bash(git diff *)`、`Bash(git status)`，拒绝 `Edit(./migrations/**)`、`Read(./.env)`、`Bash(git push --force *)`、`Bash(git push origin main *)`。`protect-tests.sh` 在 `Edit|Write` 前把目标转成仓库相对路径，再用 `git cat-file -e "main:$rel"` 查询主分支。已有测试必须由人决定能否变更，本轮新增的测试仍可调整。每步开始读持久状态，结束向 JSONL 追加记录。示例在 `2026-11-04T14:02:11Z` 记下 #412 的第 2 次验证失败，耗费 18,234 个词元和 $0.41。`Edit|Write` 钩子看不到由 Bash 发起的编辑，差异检查因此放到外层。
+4. **由 LangGraph 执行门禁和路由**。 `plan` 从 `main` 建立 `issuebot/412`、抓标题和正文、让模型写契约。`check_contract()` 要求允许变更的路径在 `src/` 或 `tests/`，拒绝含 `..` 的路径和 `main` 上已有的测试，随后删除原始工单。`implement` 吃进契约、当前验证失败或审查结果，以及此前否决的理由。`verify` 由代码并行执行测试、lint 和类型检查，按实际退出状态汇合。先将新增文件也纳入暂存区，再与 `main` 比较，越出契约或改写旧测试都判失败。验证通过才进入审查，失败最多携带 2,000 字符反馈返回实现，达到五轮预算或连续两轮失败数无下降就转交人。`review` 从 `claude -p --json-schema` 响应的 `structured_output` 取得 `APPROVE` 或 `BLOCKING` 及具体意见，阻断意见写入否决记录，未用完两轮审查预算则回到实现。`open_pr` 先按分支查现有 PR，已有则跳过，否则提交、推送并创建。随后 `gh pr checks --watch` 等待真实 CI，失败则转交，成功才在 `human_gate` 用 `interrupt()` 等待，恢复输入为 `approve` 才走批准路径，合并交给人。`escalate` 发模板工单评论，交代尝试次数并请人接手。`SqliteSaver` 用 `.issuebot/graph.db` 保存检查点，线程 ID 为 `issue-412`，模型成本和检查结果写入轨迹。作者用模拟的 `git`、`gh`、`npm` 和 `claude` 验证了路由、停滞、恢复和差异检查，尚未在真实仓库运行，并提醒按所用版本核对 headless 的返回字段。
+5. **接上触发器和周度改进**。 给 GitHub 工单加 `issuebot` 标签，可由 Claude Code 例程、Grok Bot 例程或 CI 启动工作图。第二个触发器只接收协作者对 IssueBot PR 的新审查评论，用不带工具的 `claude -p --json-schema` 转为修改请求列表，由代码剔除契约外的文件，实施节点只接收过滤后的列表。每周读过去七天的 `.issuebot/traces.jsonl` 和 PR 审查意见，按原因分组统计失败及转交记录，针对首要原因只提一项改动，可选 lint 规则、钩子、技能、`CLAUDE.md` 或工具变更。提案注明运行和轨迹行，在分支上回放最近五条失败工单，报告哪些通过，由人审查提案与回放结果后合并。
 
 ```markdown
 # CLAUDE.md
@@ -807,26 +807,26 @@ Read the last 7 days of .issuebot/traces.jsonl and the review comments on IssueB
 
 IssueBot 的工作图从规划、实现、验证、审查一路走到开 PR、CI 与人工批准。外层沙箱、权限、地图、工具、钩子、状态和轨迹给各节点划定行动范围。实现与验证闭合 L1，审查退回实现闭合 L2，SQLite 检查点提供 L3 的恢复能力，工单与评论启动 L4，周度回放驱动 L5。原文的二十项故障目录按这三层寻找原因，用可观察的症状和轨迹定位修复点。
 
-- **01 错改文件。** 修身份验证却碰了 `src/billing`，早期搜索返回 40 个文件，智能体选了第一个。修地图、契约文件清单和路径规则。
-- **02 工具输出过载。** 初次测试后工作质量下降，轨迹有一条 60K 词元的工具结果。给输出加摘要、限长和可搜索的单行错误。
-- **03 丢失已做决定。** 智能体重试被否决的方案，唯一的否决记录已被压缩。每步读取持久否决清单。
-- **04 秘密进入上下文。** PR 描述出现 API 密钥，轨迹显示早期读过 `.env`。阻止读取，并在工具结果中脱敏。
-- **05 环境漂移。** 本地能跑，云端找不到 `pnpm`。用 `init.sh` 或 Dockerfile 固化环境，启动会话时检查。
-- **06 规则过时。** 模型遵循团队几个月前停用的约定，来源是无人维护的嵌套 `AGENTS.md`。为说明指定负责人，并在模型升级时重验规则。
-- **07 共享机器权限泄露。** 分流机器人用了另一机器人的生产登录。按信任级别分账号，限制保险库凭据权限。
-- **08 提前收尾。** 机器人报“已修复”，CI 仍红，最近十轮没有测试命令。让运行系统执行检查，或要求 `/goal` 看见对话里的验证证据。
-- **09 空转。** 同一个编辑和错误出现五次，差异哈希一致。回传具体错误，触发停滞退出。
-- **10 振荡。** lint 通过后测试转红，下一轮又变成 lint 失败。每轮跑完整组检查，以 `ALL` 汇合。
-- **11 利用验收漏洞。** 测试全绿但缺陷还在，轨迹显示执行者编辑了旧测试。用工具钩子和外层差异检查保护测试，让执行者无法改写评估依据。
-- **12 评估器过于宽松。** 漏掉一半工单要求的差异获批，评语全是称赞。缩小问题、设定硬标准，用过去的人类审查校准。
-- **13 超预算。** 一行拼写错误跑了 31 轮、花了 $40。限制轮数和词元，给小任务短路径。
-- **14 定时任务静默失败。** 例程显示运行了一周，其实每次都在身份验证时退出。每次失败告警，每天发存活信号。
-- **15 假依赖。** 一次运行 12 分钟、有 8 分钟在等待，lint 等测试，类型又等 lint。并行执行互不消费结果的检查。
-- **16 汇合失误。** 一项可选检查超时，`Promise.all` 拒绝整个运行。先保留分支结果，再按声明的 `ALL`、`ANY` 或 `QUORUM` 判断。
-- **17 恢复后重复动作。** 同一线程重跑 `open_pr`，留下两份 PR。创建前查重，或待暂停点之后再创建。
-- **18 路由选错。** 安全工单仅凭标题被送进文档拼写短路径。结合标签和涉及的文件，并记录每次选择。
-- **19 自由文本交接。** 实现漏掉半份计划，输入里缺 `files_to_change`。传递有类型、可校验的计划对象。
-- **20 执行者冲突。** 两个执行者都认领身份验证清理，以不同方式重写同一模块。用任务锁、工作树或规划者按文件分配任务。
+- **01 错改文件**。 修身份验证却碰了 `src/billing`，早期搜索返回 40 个文件，智能体选了第一个。修地图、契约文件清单和路径规则。
+- **02 工具输出过载**。 初次测试后工作质量下降，轨迹有一条 60K 词元的工具结果。给输出加摘要、限长和可搜索的单行错误。
+- **03 丢失已做决定**。 智能体重试被否决的方案，唯一的否决记录已被压缩。每步读取持久否决清单。
+- **04 秘密进入上下文**。 PR 描述出现 API 密钥，轨迹显示早期读过 `.env`。阻止读取，并在工具结果中脱敏。
+- **05 环境漂移**。 本地能跑，云端找不到 `pnpm`。用 `init.sh` 或 Dockerfile 固化环境，启动会话时检查。
+- **06 规则过时**。 模型遵循团队几个月前停用的约定，来源是无人维护的嵌套 `AGENTS.md`。为说明指定负责人，并在模型升级时重验规则。
+- **07 共享机器权限泄露**。 分流机器人用了另一机器人的生产登录。按信任级别分账号，限制保险库凭据权限。
+- **08 提前收尾**。 机器人报“已修复”，CI 仍红，最近十轮没有测试命令。让运行系统执行检查，或要求 `/goal` 看见对话里的验证证据。
+- **09 空转**。 同一个编辑和错误出现五次，差异哈希一致。回传具体错误，触发停滞退出。
+- **10 振荡**。 lint 通过后测试转红，下一轮又变成 lint 失败。每轮跑完整组检查，以 `ALL` 汇合。
+- **11 利用验收漏洞**。 测试全绿但缺陷还在，轨迹显示执行者编辑了旧测试。用工具钩子和外层差异检查保护测试，让执行者无法改写评估依据。
+- **12 评估器过于宽松**。 漏掉一半工单要求的差异获批，评语全是称赞。缩小问题、设定硬标准，用过去的人类审查校准。
+- **13 超预算**。 一行拼写错误跑了 31 轮、花了 $40。限制轮数和词元，给小任务短路径。
+- **14 定时任务静默失败**。 例程显示运行了一周，其实每次都在身份验证时退出。每次失败告警，每天发存活信号。
+- **15 假依赖**。 一次运行 12 分钟、有 8 分钟在等待，lint 等测试，类型又等 lint。并行执行互不消费结果的检查。
+- **16 汇合失误**。 一项可选检查超时，`Promise.all` 拒绝整个运行。先保留分支结果，再按声明的 `ALL`、`ANY` 或 `QUORUM` 判断。
+- **17 恢复后重复动作**。 同一线程重跑 `open_pr`，留下两份 PR。创建前查重，或待暂停点之后再创建。
+- **18 路由选错**。 安全工单仅凭标题被送进文档拼写短路径。结合标签和涉及的文件，并记录每次选择。
+- **19 自由文本交接**。 实现漏掉半份计划，输入里缺 `files_to_change`。传递有类型、可校验的计划对象。
+- **20 执行者冲突**。 两个执行者都认领身份验证清理，以不同方式重写同一模块。用任务锁、工作树或规划者按文件分配任务。
 
 ```plaintext
 01 WRONG FILES
