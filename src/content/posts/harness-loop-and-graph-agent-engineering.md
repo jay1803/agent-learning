@@ -82,7 +82,7 @@ CLAUDE.md / AGENTS.md
   pointers to deeper docs
 ```
 
-**第三项是设计智能体与计算机的交互界面（ACI**）。 Anthropic 在《Building effective agents》里说，做 SWE-bench 时花在工具上的时间超过了优化整体提示词的时间。模型切换目录后反复弄错相对路径，他们将工具改为只接收绝对路径，错误随即消失。工具应使用 `github_search_issues` 这种带命名空间的名称，只返回有用字段，限制响应长度，并在错误信息里交代发生了什么、可以尝试什么。文章给出的 Claude Code 默认工具输出上限是 25,000 个词元。Anthropic 在自己的研究系统评估中仅改写工具描述，就缩短了 40% 的任务完成时间。IssueBot 的测试报告如果有 6,000 行，而真正的错误在第 4,812 行，模型就得为寻找一条断言读整份报告。更合适的输出先报总数，再只列失败项，把 `ERROR` 和原因放在同一行。Nicholas Carlini 为编译器智能体整理测试输出，也是为了防止“上下文窗口污染”。
+**第三项是设计智能体与计算机的交互界面（ACI）**。 Anthropic 在《Building effective agents》里说，做 SWE-bench 时花在工具上的时间超过了优化整体提示词的时间。模型切换目录后反复弄错相对路径，他们将工具改为只接收绝对路径，错误随即消失。工具应使用 `github_search_issues` 这种带命名空间的名称，只返回有用字段，限制响应长度，并在错误信息里交代发生了什么、可以尝试什么。文章给出的 Claude Code 默认工具输出上限是 25,000 个词元。Anthropic 在自己的研究系统评估中仅改写工具描述，就缩短了 40% 的任务完成时间。IssueBot 的测试报告如果有 6,000 行，而真正的错误在第 4,812 行，模型就得为寻找一条断言读整份报告。更合适的输出先报总数，再只列失败项，把 `ERROR` 和原因放在同一行。Nicholas Carlini 为编译器智能体整理测试输出，也是为了防止“上下文窗口污染”。
 
 ```plaintext
 NAMES    namespaced: github_search_issues, not search

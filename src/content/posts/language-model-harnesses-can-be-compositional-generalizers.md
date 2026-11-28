@@ -19,9 +19,9 @@ author: "Alex L. Zhang, Souradip Chakraborty, Omar Khattab"
 作者把常见的 harness 抽象拆成三种：**上下文外置**（完整上下文留在环境里，模型只看切片）、**程序化工具调用**（工具和子 agent 是代码里的函数，中间状态不必进模型）、**子 agent 调用**（显式扇出给拥有全新上下文的其他模型）。对比对象：
 
 - **基础 Transformer**：代表“轨迹即 prompt”，所有上下文直接塞给模型。
-- **Pi（pi-mono**）：ReAct 循环加终端、压缩和子 agent 工具，即多数编码 agent 的形态，另把长上下文放进文件。
+- **Pi（pi-mono）**：ReAct 循环加终端、压缩和子 agent 工具，即多数编码 agent 的形态，另把长上下文放进文件。
 - **CodeAct / LM + REPL**：用代码 REPL 做程序化工具调用，但没有程序化子调用，用来测子调用的价值。
-- **RLM（Recursive Language Model**）：上下文外置加程序化子 agent 调用，深度为 1。
+- **RLM（Recursive Language Model）**：上下文外置加程序化子 agent 调用，深度为 1。
 
 训练时 Pi 的根和子 agent 都训；RLM 只对根轨迹计算 loss。
 
@@ -59,7 +59,7 @@ author: "Alex L. Zhang, Souradip Chakraborty, Omar Khattab"
 
 结果，同一 RLM harness 下：
 
-- 平均分从 46.1 到 58.5，**提升 12.4 分（相对 26.9%**）；
+- 平均分从 46.1 到 58.5，**提升 12.4 分（相对 26.9%）**；
 - 根轨迹**轮数少约 3 倍、输入 token 少约 6 倍**，整体 token 少约 2 倍，子调用派发更多；
 - BrowseComp-Plus 上分数涨得不多，但轮数和 token 显著下降；
 - 不给提示、直接在合成环境上做 RL，也能在 8 个任务里提升 7 个（平均 +6.8），但没有效率收益，学到的行为也和 SFT 不同。

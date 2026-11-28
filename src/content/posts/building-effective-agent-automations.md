@@ -53,7 +53,7 @@ Agent 用 bash 里的 curl 调 `chat.postMessage` 发帖，bash 工具默认无�
 
 在 Managed Agents 里，agent 只是一份配置，由 deployment 来运行：它指定 agent、环境、每次运行的第一条消息，以及计划、vault、记忆库和预算。每次 cron 触发，平台都开一个全新会话。示例是工作日纽约时间 7:32（`32 7 * * 1-5`）。可以用 `ant beta:deployments run` 手动触发测试。
 
-常见 bug 是 **agent 按服务器时区算日期，把今天早上叫成“昨天**”。所以 `timezone` 字段决定何时触发，而第一条消息的第二行明确告诉 agent 用哪个时区算日期。
+常见 bug 是 **agent 按服务器时区算日期，把今天早上叫成“昨天”**。所以 `timezone` 字段决定何时触发，而第一条消息的第二行明确告诉 agent 用哪个时区算日期。
 
 ## 记忆：两个库，分开读写
 
